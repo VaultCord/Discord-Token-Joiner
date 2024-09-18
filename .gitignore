@@ -1,0 +1,7 @@
+build/
+*.pyc
+dist
+main.spec
+file_version_info.txt
+notes.txt
+VaultCordJoinTokens.spec
