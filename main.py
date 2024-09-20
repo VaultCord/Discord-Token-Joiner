@@ -238,13 +238,13 @@ def main():
     # Check Discord tokens file exists
     if not os.path.exists('tokens.txt'):
         print(f"You must create a {colors['yellow']}tokens.txt{colors['white']} file with your Discord tokens!")
-        print(f'Please watch our YouTube tutorial video: {colors["light_blue"]}https://www.youtube.com/@VaultCord')
+        print(f'Please watch our YouTube tutorial video: {colors["light_blue"]}https://www.youtube.com/watch?v=th1QQlxiyTs')
         cleanup()
         return
         
     print(f'----------------------------------------------------------')
     print(f'{colors["green"]}Welcome!{colors["white"]} Use this to join Discord tokens to your server.')
-    print(f'Please watch our YouTube tutorial video: {colors["light_blue"]}https://www.youtube.com/@VaultCord')
+    print(f'Please watch our YouTube tutorial video: {colors["light_blue"]}https://www.youtube.com/watch?v=th1QQlxiyTs')
     print(f'----------------------------------------------------------\n')
         
     api_key = read_token_from_file('vaultcord_api.txt')
@@ -271,7 +271,7 @@ def main():
     while server_choice is None or (server_choice < 0 or server_choice >= len(servers)):
         if server_choice is not None:
             print(f'You must select a {colors["yellow"]}NUMBER{colors["white"]} between (1-{len(servers)})')
-            print(f'Please watch our YouTube tutorial video: {colors["light_blue"]}https://www.youtube.com/@VaultCord')
+            print(f'Please watch our YouTube tutorial video: {colors["light_blue"]}https://www.youtube.com/watch?v=th1QQlxiyTs')
     
         # Input validation for numeric input
         try:
