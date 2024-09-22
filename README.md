@@ -6,9 +6,20 @@
 ## Support + Community
 [Telegram Chat](https://t.me/vaultcode) | [Website](https://vaultcord.com/) | [Tutorial Video (click here)](https://www.youtube.com/watch?v=th1QQlxiyTs)
 
+## Is this safe?
+
+Yes, this program is safe. Here's why:
+
+- The source code is completely open. So you can be 100% sure it's innocent code
+- You can run our program on https://tria.ge/ or **Windows Sandbox** or any RDP server. We do <ins>**NOT**</ins> block Virtual Machines
+
+Your botted Discord tokens are never sent to us. They are only used on Discord's authorization page to create OAuth2 API keys https://discord.com/developers/docs/topics/oauth2#client-credentials-grant
+<br><br>
+These OAuth2 API keys only have the permission of joining servers. No messages, or any other private data can be accessed.
+
 ## Copyright License
 
-VaultCord Account Connector is licensed under **Elastic License 2.0**
+VaultCord Token Joiner is licensed under **Elastic License 2.0**
 
 * You may not provide the software to third parties as a hosted or managed
 service, where the service provides users with access to any substantial set of
@@ -23,18 +34,6 @@ of the licensor in the software. Any use of the licensor’s trademarks is subje
 to applicable law.
 
 Thank you for your compliance, we work hard on the development of VaultCord and do not appreciate our copyright being infringed.
-
-
-Certain files, excluding the `main.py` file are licensed under GPL-3.0 license. Disclosures will be visible where applicable.
-
-```
-# -*- coding: utf-8 -*-
-# Copyright (C) 2021 github.com/ItsChasa
-#
-# This source code has been released under the GNU Affero General Public
-# License v3.0. A copy of this license is available at
-# https://www.gnu.org/licenses/agpl-3.0.en.html
-```
 
 ## Installation
 ### Using Binary EXE (Easier)
