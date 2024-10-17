@@ -1,5 +1,5 @@
 tls-client
 requests
-ctypes
+typing_extensions
 keyboard
 colorama
