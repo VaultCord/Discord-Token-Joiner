@@ -1,0 +1,5 @@
+tls-client
+requests
+typing_extensions
+keyboard
+colorama
