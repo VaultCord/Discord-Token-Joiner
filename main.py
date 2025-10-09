@@ -5,7 +5,9 @@ import webbrowser
 import keyboard
 import time
 import base64
+import uuid
 import os
+import re
 import ctypes
 import threading
 from sys import exit
@@ -22,11 +24,77 @@ colors = {
     "white": Fore.WHITE,
 }
 
+def generate_discord_headers(token: str):
+    # get Discord build number
+    login_html = requests.get("https://discord.com/login").text
+    build_match = None
+    if '"BUILD_NUMBER":"' in login_html:
+        match = re.search(r'"BUILD_NUMBER":"(\d+)"', login_html)
+        if match:
+            build_match = match.group(1)
+    build_number = build_match or "454358"
+    # get latest Chrome stable version
+    version_data = requests.get(
+        "https://googlechromelabs.github.io/chrome-for-testing/last-known-good-versions.json").json()
+    latest_version = version_data["channels"]["Stable"]["version"]
+    milestone = latest_version.split(".")[0]
+
+    # generate UA and client props
+    user_agent = f"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/{latest_version} Safari/537.36"
+    sec_ch_ua = f'"Google Chrome";v="{milestone}", "Not-A.Brand";v="8", "Chromium";v="{milestone}"'
+
+    props = {
+        "os": "Windows",
+        "browser": "Chrome",
+        "device": "",
+        "system_locale": "pl-PL",
+        "has_client_mods": False,
+        "browser_user_agent": user_agent,
+        "browser_version": latest_version,
+        "os_version": "10",
+        "referrer": "",
+        "referring_domain": "",
+        "referrer_current": "",
+        "referring_domain_current": "",
+        "release_channel": "stable",
+        "client_build_number": int(build_number),
+        "client_event_source": None,
+        "client_launch_id": str(uuid.uuid4()),
+        "launch_signature": str(uuid.uuid4()),
+        "client_app_state": "focused",
+        "client_heartbeat_session_id": str(uuid.uuid4())
+    }
+
+    x_super_properties = base64.b64encode(json.dumps(props).encode()).decode()
+
+    headers = {
+        "accept": "*/*",
+        "accept-language": "en,en-US;q=0.9,en;q=0.8,fr-FR;q=0.7,fr;q=0.6",
+        "authorization": token,
+        "content-type": "application/json",
+        "origin": "https://discord.com",
+        "sec-ch-ua": sec_ch_ua,
+        "sec-ch-ua-mobile": "?0",
+        "sec-ch-ua-platform": '"Windows"',
+        "sec-fetch-dest": "empty",
+        "sec-fetch-mode": "cors",
+        "sec-fetch-site": "same-origin",
+        "user-agent": user_agent,
+        "x-debug-options": "bugReporterEnabled",
+        "x-discord-locale": "en-US",
+        "x-discord-timezone": "Europe/Warsaw",
+        "x-super-properties": x_super_properties
+    }
+
+    return headers
+
+
 def joiner(token, botid, client_secret, redirect_uri, server_id, api_key):
     # Ensure tokens read from file appear to be real, to reduce Discord API spam
     token_parts = token.split('.')
     if len(token_parts) != 3:
-        print(f"{colors['white']}[-]: {colors['light_red']} The value \"{token}\" isn't a Discord token. Fix your tokens.txt file")
+        print(
+            f"{colors['white']}[-]: {colors['light_red']} The value \"{token}\" isn't a Discord token. Fix your tokens.txt file")
     else:
         # Extract the user ID from the first section of the Discord token
         user_id_base64 = token_parts[0]
@@ -34,52 +102,45 @@ def joiner(token, botid, client_secret, redirect_uri, server_id, api_key):
         user_id_base64 += padding
         user_id_bytes = base64.b64decode(user_id_base64)
         user_id = user_id_bytes.decode('utf-8')
-        
+
         # Discord fingerprinting security
         session = tls_client.Session(client_identifier=f"chrome_124", random_tls_extension_order=True)
-        headers = {
-            'accept': '*/*',
-            'accept-language': 'en,en-US;q=0.9,en;q=0.8,fr-FR;q=0.7,fr;q=0.6',
-            'authorization': token,
-            'content-type': 'application/json',
-            'origin': 'https://discord.com',
-            'sec-ch-ua': '"Not-A.Brand";v="99", "Chromium";v="124"',
-            'sec-ch-ua-mobile': '?0',
-            'sec-ch-ua-platform': '"Windows"',
-            'sec-fetch-dest': 'empty',
-            'sec-fetch-mode': 'cors',
-            'sec-fetch-site': 'same-origin',
-            'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.6367.118 Safari/537.36',
-            'x-debug-options': 'bugReporterEnabled',
-            'x-discord-locale': 'en-US',
-            'x-discord-timezone': 'Asia/Saigon',
-            'x-super-properties': 'eyJvcyI6IldpbmRvd3MiLCJicm93c2VyIjoiQ2hyb21lIiwiZGV2aWNlIjoiIiwic3lzdGVtX2xvY2FsZSI6ImVuLVVTIiwiYnJvd3Nlcl91c2VyX2FnZW50IjoiTW96aWxsYS81LjAgKFdpbmRvd3MgTlQgMTAuMDsgV2luNjQ7IHg2NCkgQXBwbGVXZWJLaXQvNTM3LjM2IChLSFRNTCwgbGlrZSBHZWNrbykgQ2hyb21lLzEyNC4wLjYzNjcuMTE4IFNhZmFyaS81MzcuMzYiLCJicm93c2VyX3ZlcnNpb24iOiIxMjQuMC42MzY3LjExOCIsIm9zX3ZlcnNpb24iOiIxMCIsInJlZmVycmVyIjoiIiwicmVmZXJyaW5nX2RvbWFpbiI6IiIsInJlZmVycmVyX2N1cnJlbnQiOiIiLCJyZWZlcnJpbmdfZG9tYWluX2N1cnJlbnQiOiIiLCJyZWxlYXNlX2NoYW5uZWwiOiJzdGFibGUiLCJjbGllbnRfYnVpbGRfbnVtYmVyIjoyOTcyNzQsImNsaWVudF9ldmVudF9zb3VyY2UiOm51bGwsImRlc2lnbl9pZCI6MH0=',        
-        }
-        cookies = dict(session.get(f"https://discord.com/api/v9/users/@me", headers=headers).cookies); cookies["__cf_bm"] = "0duPxpWahXQbsel5Mm.XDFj_eHeCKkMo.T6tkBzbIFU-1679837601-0-AbkAwOxGrGl9ZGuOeBGIq4Z+ss0Ob5thYOQuCcKzKPD2xvy4lrAxEuRAF1Kopx5muqAEh2kLBLuED6s8P0iUxfPo+IeQId4AS3ZX76SNC5F59QowBDtRNPCHYLR6+2bBFA=="; cookies["locale"] = "vi"
+
+        # Generate dynamic headers for this token
+        headers = generate_discord_headers(token)
+        headers_cookies = {"user-agent": headers["user-agent"]}
+        cookies = dict(session.get(f"https://discord.com/api/v9/experiments", headers=headers_cookies).cookies);
+        cookies[
+            "__cf_bm"] = "0duPxpWahXQbsel5Mm.XDFj_eHeCKkMo.T6tkBzbIFU-1679837601-0-AbkAwOxGrGl9ZGuOeBGIq4Z+ss0Ob5thYOQuCcKzKPD2xvy4lrAxEuRAF1Kopx5muqAEh2kLBLuED6s8P0iUxfPo+IeQId4AS3ZX76SNC5F59QowBDtRNPCHYLR6+2bBFA==";
+        cookies["locale"] = "vi"
         try:
-            headers["cookie"] = f'__dcfduid={cookies["__dcfduid"]}; __sdcfduid={cookies["__sdcfduid"]}; __cfruid={cookies["__cfruid"]}; __cf_bm={cookies["__cf_bm"]}; locale={cookies["locale"]}'
-    
+            headers["cookie"] = "; ".join(
+                f"{k}={cookies[k]}"
+                for k in ["__dcfduid", "__sdcfduid", "__cf_bm", "locale"]
+                if k in cookies and cookies[k]
+            )
+
             querystring = {
-                "client_id":str(botid),
-                "response_type":"code",
-                "redirect_uri":redirect_uri,
-                "scope":"identify guilds.join",
-                "state":str(botid)
+                "client_id": str(botid),
+                "response_type": "code",
+                "redirect_uri": redirect_uri,
+                "scope": "identify guilds.join",
+                "state": str(botid)
             }
-    
+
             request = session.post(
                 f"https://discord.com/api/v9/oauth2/authorize",
                 headers=headers,
                 cookies=cookies,
                 params=querystring,
-                json={"permissions":"0","authorize":True}
+                json={"permissions": "0", "authorize": True}
             )
             if "location" in request.text:
                 answer = request.json()["location"]
                 url = urlparse(answer)
-    
+
                 code = parse_qs(url.query).get('code', [None])[0]
-                
+
                 # Exchange code for access token
                 post_data = {
                     'client_id': botid,
@@ -91,27 +152,27 @@ def joiner(token, botid, client_secret, redirect_uri, server_id, api_key):
                 headers = {
                     'Content-Type': 'application/x-www-form-urlencoded'
                 }
-    
+
                 response = session.post(
-                    f'https://discord.com/api/oauth2/token', 
+                    f'https://discord.com/api/oauth2/token',
                     headers=headers,
                     data=post_data
                 )
                 if response.status_code == 200:
                     try:
                         json = response.json()
-                        
+
                         access_token = json.get("access_token")
                         refresh_token = json.get("refresh_token")
                         username = f'token_{int(time.time())}'
                     except Exception as e:
                         print(f"{colors['white']}[-]: {colors['light_red']} Caught error while authorizing {e}")
                         return
-                    
+
                     headers = {
                         'Authorization': f'Bearer {api_key}'
                     }
-                    
+
                     json_data = {
                         'serverId': server_id,
                         'userId': user_id,
@@ -119,14 +180,14 @@ def joiner(token, botid, client_secret, redirect_uri, server_id, api_key):
                         'accessToken': access_token,
                         'refreshToken': refresh_token,
                     }
-                    
+
                     # Import member into VaultCord
                     request = requests.post(
                         f'{BASE_URL}/members/import',
                         headers=headers,
                         json=json_data
                     )
-                    
+
                     try:
                         json = request.json()
                         if json.get("success") == True:
@@ -135,6 +196,7 @@ def joiner(token, botid, client_secret, redirect_uri, server_id, api_key):
                             print(f"{colors['white']}[-]: {colors['light_red']} Failed to import token {request.text}")
                     except Exception as e:
                         print(f"{colors['white']}[-]: {colors['light_red']} Caught error while authorizing {e}")
+
                 else:
                     print(f"{colors['white']}[-]: {colors['light_red']} Failed to exchange code {response.text}")
             else:
