@@ -315,7 +315,7 @@ def main():
         if api_key:
             print(f"{colors['light_red']}Invalid token{colors['white']}, please enter a valid Vaultcord API token.")
         else:
-            webbrowser.open('https://dash.vaultcord.com/settings')
+            webbrowser.open('https://dash.vaultcord.com/developers')
         api_key = input("Please enter a valid Vaultcord API token: ").strip()
     save_token_to_file('vaultcord_api.txt', api_key)
     
@@ -339,7 +339,7 @@ def main():
         try:
             server_choice = int(input(f"Select a server number (1-{len(servers)}): ")) - 1
         except ValueError:
-            print(f'{colors["red"]}Invalid input!{colors["white"]} Please enter a valid number.')
+            print(f'{colors["light_red"]}Invalid input!{colors["white"]} Please enter a valid number.')
             server_choice = None  # Reset the choice to keep the loop running
             
     selected_server = servers[server_choice]
@@ -349,6 +349,11 @@ def main():
 
     # Step 3: Fetch server settings
     server_settings = fetch_server_settings(server_id, api_key)
+    
+    if int(server_settings["data"]["botId"]) == 7777:
+        print(f'{colors["light_red"]}Our pre-made verified bot can\'t be used for ToS reasons and because we can\'t securely download a public bot token used by 4k+ servers to your computer. Please create a new server with a custom VaultCord bot https://dash.vaultcord.com/bots/add')
+        cleanup()
+        return
 
     if server_settings:
         # Step 4: Fetch bot settings
