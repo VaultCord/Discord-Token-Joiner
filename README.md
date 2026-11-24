@@ -37,7 +37,7 @@ Thank you for your compliance, we work hard on the development of VaultCord and 
 
 ## Installation
 ### Using Binary EXE (Easier)
-1. Download the zip for your Operating System from [Releases](https://github.com/VaultCord/Account-Connector/releases)
+1. Download the zip for your Operating System from [Releases](https://github.com/VaultCord/Discord-Token-Joiner/releases)
 2. Unzip the contents into a folder
 3. Run the exe
 
